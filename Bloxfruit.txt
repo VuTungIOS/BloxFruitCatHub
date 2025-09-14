@@ -1,0 +1,155 @@
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/tbao143/Library-ui/refs/heads/main/Redzhubui"))()
+
+local Window = redzlib:MakeWindow({
+  Title = "Hunty Zombie",
+  SubTitle = "by Vutungios",
+  SaveFolder = "Redz | redz lib v5.lua"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://70862716901334", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(0, 5) },
+})
+
+local Tab = Window:MakeTab({"Discord", "info"})
+
+Tab:AddDiscordInvite({
+    Name = "Tuấn Anh IOS",
+    Description = "Join our discord community to receive information about the next update",
+    Invite = "https://discord.gg/C8kYCC3Y",
+})
+
+local Tab2 = Window:MakeTab({"Farm", "home"})
+
+local Dropdown = Tab2:AddDropdown({
+  Name = "Kích Thước Ui",
+  Description = "Điều chỉnh kích thước giao diện",
+  Options = {"Small", "Medium", "Large", "Bigger"},
+  Default = "medium",
+  Flag = "Large",
+  Callback = function()
+    
+  end
+})
+
+local Section = Tab2:AddSection({"Farm"})
+
+Tab2:AddToggle({
+    Name = "Farm zombie",
+    Description = "Tự động đánh zombie",
+    Default = true,
+    Callback = function()
+
+    end
+})
+
+Tab2:AddToggle({
+    Name = "auto join",
+    Description = "Tự động vào map",
+    Default = false,
+    Callback = function()
+
+    end
+})
+
+Tab2:AddToggle({
+    Name = "Esp",
+    Description = "định vị các vật phẩm,người chơi",
+    Default = false,
+    Callback = function()
+
+    end
+})
+
+getgenv().AutoFarm = true
+getgenv().AutoPick = true
+
+-- Toggle Auto Farm Quái
+Tab2:AddToggle({
+    Name = "Auto Farm Quái",
+    Description = "Tự động tìm và đánh zombie",
+    Default = false,
+    Callback = function(value)
+        getgenv().AutoFarm = value
+        if value then
+            AutoFarmFunc()
+        end
+    end
+})
+
+-- Toggle Auto Pick Item
+Tab2:AddToggle({
+    Name = "Auto Pick Item",
+    Description = "Tự động nhặt vật phẩm rơi ra",
+    Default = true,
+    Callback = function(value)
+        getgenv().AutoPick = value
+        if value then
+            AutoPickFunc()
+        end
+    end
+})
+
+-- Hàm Auto Farm
+function AutoFarmFunc()
+    spawn(function()
+        while getgenv().AutoFarm do
+            task.wait(0.3)
+
+            local player = game.Players.LocalPlayer
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if not root then continue end
+
+            local nearest, dist = nil, math.huge
+            for _, mob in pairs(workspace:GetChildren()) do
+                if mob:FindFirstChild("Humanoid") 
+                and mob:FindFirstChild("HumanoidRootPart") 
+                and mob.Name:lower():find("zombie") then
+                    local mag = (mob.HumanoidRootPart.Position - root.Position).Magnitude
+                    if mag < dist then
+                        nearest, dist = mob, mag
+                    end
+                end
+            end
+
+            if nearest and nearest:FindFirstChild("Humanoid") and nearest.Humanoid.Health > 0 then
+                root.CFrame = nearest.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+                pcall(function()
+                    local tool = char:FindFirstChildOfClass("Tool")
+                    if tool then
+                        tool:Activate()
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+-- Hàm Auto Pick Item
+function AutoPickFunc()
+    spawn(function()
+        while getgenv().AutoPick do
+            task.wait(0.2)
+
+            local player = game.Players.LocalPlayer
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if not root then continue end
+
+            for _, item in pairs(workspace:GetChildren()) do
+                if item:IsA("Tool") or item:FindFirstChild("TouchInterest") or item:FindFirstChildWhichIsA("ProximityPrompt") then
+                    pcall(function()
+                        if item:IsA("Model") and item:FindFirstChild("PrimaryPart") then
+                            root.CFrame = item.PrimaryPart.CFrame + Vector3.new(0, 2, 0)
+                        elseif item:IsA("BasePart") then
+                            root.CFrame = item.CFrame + Vector3.new(0, 2, 0)
+                        end
+                        firetouchinterest(root, item, 0)
+                        firetouchinterest(root, item, 1)
+                    end)
+                end
+            end
+        end
+    end)
+end
